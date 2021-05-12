@@ -1,0 +1,169 @@
+<html>
+  <head>
+    <title>Pricing Calculator</title>
+    <style>
+      .field {
+        width: 140px;
+        background: #eaeaea;
+        height: 40px;
+        padding: 10px;
+        border-radius: 6px;
+        margin: 16px;
+      }
+
+      .field input {
+        width: 100%;
+      }
+
+      #numberoftrees {
+        width: 100%;
+      }
+
+      #tree-count {
+        font-size: 32px;
+      }
+
+      #tree-slider-field {
+        height: 80px;
+      }
+
+      .field-name {
+        font-size: smaller;
+        margin: 0;
+      }
+
+      .field-value {
+        margin: 3px 0 0 0;
+        font-size: large;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pricing Calculator</h1>
+    <div class="field" id="tree-slider-field">
+      <input
+      type="range"
+      id="tree-slider"
+      name="Tree Slider"
+      min="1"
+      max="500"
+      value="1"
+    />
+      <p class="field-name">Number of trees</p>
+      <p class="field-value" id="tree-count"></p>
+    </div>
+
+    <div class="field">
+      <p class="field-name">Total price ($)</p>
+      <p class="field-value" id="price-total"></p>
+    </div>
+
+    <div class="field">
+      <p class="field-name">Price per tree ($)</p>
+      <p class="field-value" id="price-per-tree"></p>
+    </div>
+
+    <div class="field">
+      <p class="field-name">Min revenue per tree ($)</p>
+      <input value="0.10" type="number" step="0.1" class="field-value" id="min-rev-per-tree"></p>
+    </div>
+
+    <div class="field">
+      <p class="field-name">Max revenue per tree ($)</p>
+      <input value="1" type="number" step="0.1" class="field-value" id="max-rev-per-tree"></p>
+    </div>
+
+    <div class="field">
+      <p class="field-name">Round up to</p>
+      <select name="Round up to" id="round-up-to">
+        <option value="none">None</option>
+        <option value="0.5">0.50</option>
+        <option value="0.99">0.99</option>
+        <option value="1">1</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+
+    <script>
+      const COST_OF_TREE = 1.00
+
+      const treeCountElement = document.getElementById("tree-count")
+      const priceTotalElement = document.getElementById("price-total")
+      const pricePerTreeElement = document.getElementById("price-per-tree")
+      const minRevPerTreeElement = document.getElementById("min-rev-per-tree")
+      const maxRevPerTreeElement = document.getElementById("max-rev-per-tree")
+      const treeSlider = document.getElementById("tree-slider")
+      const roundUpToElement = document.getElementById("round-up-to")
+
+      updateValues()
+
+      treeSlider.addEventListener("input", () => {
+        updateValues()
+      })
+
+      minRevPerTreeElement.addEventListener("input", () => {
+        updateValues()
+      })
+
+      maxRevPerTreeElement.addEventListener("input", () => {
+        updateValues()
+      })
+
+      roundUpToElement.addEventListener("input", () => {
+        updateValues()
+      })
+
+      function updateValues() {
+        treeCountElement.innerText = "" + treeSlider.value
+        const minRevPerTree = Number(minRevPerTreeElement.value)
+        const maxRevPerTree = Number(maxRevPerTreeElement.value)
+        const numOfTrees = Number(treeSlider.value)
+        
+        // Linearly scale rev per tree based on percentage of max num of trees
+        const diff = maxRevPerTree - minRevPerTree
+        const rev = diff * (1 - numOfTrees / 500) + minRevPerTree
+
+        let totalPrice = Number(numOfTrees * COST_OF_TREE + rev * numOfTrees)
+        totalPrice = roundPrice(totalPrice)
+
+        pricePerTreeElement.innerText = "" + (totalPrice / numOfTrees).toFixed(2)
+        priceTotalElement.innerText = "" + totalPrice.toFixed(2)
+      }
+
+      function roundPrice(price) {
+        if (roundUpToElement.value === "none") { 
+          return price
+        }
+
+        const decimalPrice = price - Math.floor(price);
+        const roundUpTo = Number(roundUpToElement.value)
+        if (roundUpTo === 0.5) {
+          if (decimalPrice < 0.5) {
+            return Math.trunc(price) + 0.5
+          } else {
+            return Math.ceil(price)
+          }
+        }
+
+        if (roundUpTo === 0.99) {
+          if (Math.floor(price) === price) {
+            return price
+          } else {
+            return Math.trunc(price) + 0.99
+          }
+        }
+
+        if (roundUpTo === 1) {
+          return Math.ceil(price)
+        }
+
+        if (roundUpTo === 5) {
+          return Math.ceil(price / 5) * 5
+        }
+
+        console.error("We shouldn't get here")
+        return price
+      }
+    </script>
+  </body>
+</html>
